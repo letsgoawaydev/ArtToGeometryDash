@@ -1,4 +1,3 @@
-using GeometryDashAPI.Attributes;
 using GeometryDashAPI.Data;
 using GeometryDashAPI.Levels;
 using GeometryDashAPI.Levels.GameObjects.Default;
@@ -13,12 +12,12 @@ using System.IO;
 
 namespace ArtToGeometryDash
 {
-    public class Program
+    public class OldProgram
     {
         private static string levelName;
         private static int levelRevision;
         private static string fileArt;
-        private static int artWidth, artHeight;
+        private static int artWight, artHeight;
         private static Bitmap art;
         private static byte[] filterColor;
         private static bool useAlphaChannel;
@@ -35,7 +34,7 @@ namespace ArtToGeometryDash
         private static Level level;
         private static bool filtering;
         private static string mode;
-        private static int HSVChannel;
+        private static short HSVChannel;
 
         const string consoleLine = "________________";
 
@@ -72,24 +71,15 @@ namespace ArtToGeometryDash
         private static Bitmap OpenResizeArt(string path, int width, int height)
         {
             var img = new Bitmap(path);
-            if (artHeight == 0 && artWidth == 0)
-            {
-                artWidth = img.Width;
-                artHeight = img.Height;
-                return img;
-            }
-            else
-            {
-                var res = new Bitmap(width, height);
-                var drawImage = Graphics.FromImage(res);
+            var res = new Bitmap(width, height);
+            var drawImage = Graphics.FromImage(res);
 
-                drawImage.InterpolationMode = InterpolationMode.Bilinear;
-                var destination = new Rectangle(0, 0, width, height);
-                var source = new Rectangle(0, 0, img.Width, img.Height);
-                drawImage.DrawImage(img, destination, source, GraphicsUnit.Pixel);
+            drawImage.InterpolationMode = InterpolationMode.Bilinear;
+            var destination = new Rectangle(0, 0, width, height);
+            var source = new Rectangle(0, 0, img.Width, img.Height);
+            drawImage.DrawImage(img, destination, source, GraphicsUnit.Pixel);
 
-                return res;
-            }
+            return res;
         }
 
         private static string RGB2HSVString(byte ri, byte gi, byte bi)
@@ -127,15 +117,15 @@ namespace ArtToGeometryDash
             return string.Format("{0}a{1}a{2}a0a0", h, Math.Round(s, 2), Math.Round(v, 2)).Replace(",", ".");
         }
 
-        public static void Main(string[] args)
+        static void Main(string[] args)
         {
             Console.Title = "Art To Geometry Dash";
             Welcome();
 
-            localLevels = LocalLevels.LoadFile();
+            localLevels = new LocalLevels();
             InputSettings(localLevels);
 
-            Console.Write("How to add image, HSV or RGB (HSV uses only 1 color channel, RGB is only recommended for pixel art)\nWrite 'h' or 'r'\n> ");
+            Console.Write("How to add image, HSV or RGB (HSV use only 1 color channel)\nWrite h or r\n> ");
             mode = Console.ReadLine().ToLower();
             Console.Clear();
             if (mode == "h")
@@ -148,7 +138,7 @@ namespace ArtToGeometryDash
             sw.Restart();
 
             Console.WriteLine("Loading image ...");
-            art = OpenResizeArt(fileArt, artWidth, artHeight);
+            art = OpenResizeArt(fileArt, artWight, artHeight);
 
             Console.WriteLine("Loading level ...");
             if (levelRevision == -1)
@@ -164,7 +154,7 @@ namespace ArtToGeometryDash
                 CreateRGBart();
 
             Console.WriteLine("Save...");
-            localLevels.GetLevel(levelName).SaveLevel(level);
+            localLevels.GetLevel(levelName).LevelString = level.ToString();
             localLevels.Save();
 
             sw.Stop();
@@ -209,52 +199,44 @@ namespace ArtToGeometryDash
 
             Console.Clear();
 
-            Console.Write("Art Width and height. Type nothing for the actual image's width, otherwise it will\n either be upscaled or downscaled.\nExample: 32 32\n> ");
+            Console.Write("Art Width and height.\nExample: 32 32\n> ");
+            string[] artsize = Console.ReadLine().Split(' ');
+            artWight = int.Parse(artsize[0]);
+            artHeight = int.Parse(artsize[1]);
+            Console.Clear();
 
+            Console.Write("The size of the pixel in art.\n1: 1 pixel = 1/4 block\nExample: 0,8\n> ");
+            scale = float.Parse(Console.ReadLine().Replace(",", "."), CultureInfo.InvariantCulture);
+            Console.Clear();
 
-            string artsize = Console.ReadLine();
-            if (artsize == "")
+            Console.Write("Alpha color.\nExample 1: 255 255 255 (Cut close to white color)\nExample 2: A 245 (Cuts all pixels with little aplha.)\nExample 3: N (for skip) \n> ");
+            string[] al = Console.ReadLine().Split(' ');
+            // Eng a and Rus а
+            if (al.Length > 1)
             {
-                artWidth = 0;
-                artHeight = 0;
+                if (al[0].ToLower() == "a" || al[0].ToLower() == "а")
+                {
+                    useAlphaChannel = true;
+                    alphaChannel = byte.Parse(al[1]);
+                }
+                else
+                {
+                    filterColor = new byte[3];
+                    filterColor[0] = byte.Parse(al[0]);
+                    filterColor[1] = byte.Parse(al[1]);
+                    filterColor[2] = byte.Parse(al[2]);
+                }
+                filtering = true;
             }
             else
-            {
-                artWidth = int.Parse(artsize.Split(' ')[0]);
-                artHeight = int.Parse(artsize.Split(' ')[1]);
-            }
+                filtering = false;
             Console.Clear();
 
-            scale = 5;
-            /*
-                        Console.Write("Alpha color.\nExample 1: 255 255 255 (Cut close to white color)\nExample 2: A 245 (Cuts all pixels with little alpha.)\nExample 3: Nothing typed (for skip) \n> ");
-                        string[] al = Console.ReadLine().Split(' ');
-                        // Eng a and Rus а
-                        if (al.Length > 1)
-                        {
-                            if (al[0].ToLower() == "a" || al[0].ToLower() == "а")
-                            {
-                                useAlphaChannel = true;
-                                alphaChannel = byte.Parse(al[1]);
-                            }
-                            else
-                            {
-                                filterColor = new byte[3];
-                                filterColor[0] = byte.Parse(al[0]);
-                                filterColor[1] = byte.Parse(al[1]);
-                                filterColor[2] = byte.Parse(al[2]);
-                            }
-                            filtering = true;
-                        }
-                        else
-                            filtering = false;*/
-            Console.Clear();
-
-            Console.Write("Editor Layer for art.\n> ");
+            Console.Write("Layer for art.\n> ");
             EditorLayer = int.Parse(Console.ReadLine());
             Console.Clear();
 
-            Console.Write("Image position in level.\nExample for position in cells: 10 5\nExample for position in coordinates: C 600 300\nUse a position far from 0 when adding a large image, otherwise the level may not open.\n> ");
+            Console.Write("Image position in level.\nExample for position in cells: 10 5\nExample for position in coordinates: C 600 300\nUsing position far from 0 when adding a large image, otherwise the level may not open.\n> ");
             string[] coords = Console.ReadLine().Split(' ');
             if (coords[0].ToLower() == "c" || coords[0].ToLower() == "с")
             {
@@ -270,9 +252,9 @@ namespace ArtToGeometryDash
 
             while (true)
             {
-                Console.Write("The name of the level in which the art will be placed.\nRecomended use empty level.\nWARNING: Possible level corruption!\n> ");
+                Console.Write("The name of the level in which the art will be placed.\nRecomended use empty level.\nPossible level damage!\n> ");
                 levelName = Console.ReadLine();
-                Console.Write("Level revision. Enter nothing if it isnt a revised level.\n> ");
+                Console.Write("Level revision. Void or string if not revision.\n> ");
                 var rev = Console.ReadLine();
                 levelRevision = int.TryParse(rev, out var num) ? num : -1;
                 try
@@ -314,8 +296,8 @@ namespace ArtToGeometryDash
                 userDistance = double.Parse(Console.ReadLine(), CultureInfo.InvariantCulture);
                 Console.Clear();
             }
-            Console.Write("One color slot is required, however the actual color will be changed using HSV\n values which dont require any color slots\n (Enter ID for base HSV color)\n> ");
-            HSVChannel = int.Parse(Console.ReadLine());
+            Console.Write("ID for base HSV color\n> ");
+            HSVChannel = short.Parse(Console.ReadLine());
             Console.Clear();
         }
 
@@ -347,16 +329,13 @@ namespace ArtToGeometryDash
                         int? sim = FindSimilar(color.R, color.G, color.B);
                         if (sim == null)
                         {
-                            GeometryDashAPI.Levels.Color col = new GeometryDashAPI.Levels.Color(currentColorID);
-                            col.Id = currentColorID;
-                            col.SetColor(color.R, color.G, color.B);
-                            level.AddColor(col);
+                            level.AddColor(new GeometryDashAPI.Levels.Color((short)currentColorID, color.R, color.G, color.B));
                             palette.Add(colorInt, currentColorID);
                             if (addTrigger)
                             {
                                 level.AddBlock(new PulseTrigger()
                                 {
-                                    TargetGroupId = currentColorID,
+                                    TargetID = currentColorID,
                                     Red = color.R,
                                     Green = color.G,
                                     Blue = color.B,
@@ -373,12 +352,12 @@ namespace ArtToGeometryDash
                             colorInt = (int)sim;
                         }
                     }
-                    ColorBlock block = new ColorBlock(3097);
-                    block.WithoutLoaded.Add("21," + palette[colorInt].ToString());
+                    DetailBlock block = new DetailBlock(917);
+                    block.WithoutLoaded.Add("21", palette[colorInt].ToString());
                     block.Scale = scale;
                     block.EditorL = (short)EditorLayer;
-                    block.PositionX = (x * 1f * scale) + coordX;
-                    block.PositionY = ((art.Height - y) * 1f * scale) + coordY;
+                    block.PositionX = (x * 7.5f * scale) + coordX;
+                    block.PositionY = ((art.Height - y) * 7.5f * scale) + coordY;
                     level.AddBlock(block);
                 }
             }
@@ -386,11 +365,7 @@ namespace ArtToGeometryDash
 
         private static void CreateHSVart()
         {
-            GeometryDashAPI.Levels.Color hsv = new GeometryDashAPI.Levels.Color(HSVChannel);
-            hsv.Id = HSVChannel;
-
-            hsv.SetColor(byte.MaxValue, byte.MinValue, byte.MinValue);
-            level.AddColor(hsv);
+            level.AddColor(new GeometryDashAPI.Levels.Color(HSVChannel, 255, 0, 0));
 
             for (int x = 0; x < art.Width; x += 1)
             {
@@ -410,19 +385,15 @@ namespace ArtToGeometryDash
                                 continue;
                         }
                     }
-                    if (color.A == byte.MinValue)
-                    {
-                        continue;
-                    }
-                    ColorBlock block = new ColorBlock(3097);
-                    block.WithoutLoaded.Add("21," + HSVChannel.ToString());
+
+                    DetailBlock block = new DetailBlock(917);
+                    block.WithoutLoaded.Add("21", HSVChannel.ToString());
                     block.Scale = scale;
                     block.EditorL = (short)EditorLayer;
-                    block.PositionX = (x * 1f * scale) + coordX;
-                    block.PositionY = ((art.Height - y) * 1f * scale) + coordY;
-                    block.WithoutLoaded.Add("41,1");
-
-                    block.WithoutLoaded.Add("43," + RGB2HSVString(color.R, color.G, color.B));
+                    block.PositionX = (x * 7.5f * scale) + coordX;
+                    block.PositionY = ((art.Height - y) * 7.5f * scale) + coordY;
+                    block.WithoutLoaded.Add("41", "1");
+                    block.WithoutLoaded.Add("43", RGB2HSVString(color.R, color.G, color.B));
                     level.AddBlock(block);
                 }
             }
