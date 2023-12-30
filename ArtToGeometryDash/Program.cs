@@ -205,7 +205,7 @@ namespace ArtToGeometryDash
                 fileArt = Console.ReadLine().Replace("\"", "");
                 if (File.Exists(fileArt))
                     break;
-                Console.WriteLine($"File '{fileArt}' doesn't contains\n");
+                Console.WriteLine($"File '{fileArt}' doesn't exist\n");
             }
 
             Console.Clear();
@@ -282,7 +282,7 @@ namespace ArtToGeometryDash
                 }
                 catch
                 {
-                    Console.WriteLine($"Level '{levelName}' with revision doesn't contains\n");
+                    Console.WriteLine($"Level '{levelName}' with revision doesn't exist\n");
                     continue;
                 }
                 break;
