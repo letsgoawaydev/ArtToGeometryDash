@@ -180,15 +180,16 @@ namespace ArtToGeometryDash
 
         private static void Welcome()
         {
-            Console.WriteLine("Art To Geometry Dash.");
+            Console.WriteLine("Art To Geometry Dash 2.2");
             Console.WriteLine("The program for the transfer of art and other images in Geometry Dash.");
-            Console.WriteLine("Version: 1.2");
-            Console.WriteLine($"{consoleLine}\n\nAuthors: Folleach and Relayx");
+            Console.WriteLine("Version: 1.0");
+            Console.WriteLine($"{consoleLine}\n\nOriginal Authors: Folleach and Relayx");
+            Console.WriteLine($"{consoleLine}\n\nFork Author: LetsGoAway");
             Console.WriteLine($"{consoleLine}\n\nContributors: Nodus Lorden (HSV and Resize mode)");
             Console.WriteLine($"{consoleLine}\n\nFor its work, the program uses the library GeometryDashAPI\nhttps://github.com/Folleach/GeometryDashAPI");
             Console.WriteLine($"{consoleLine}\n");
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("You must close all instances of the game before moving the image!");
+            Console.WriteLine("You must close all instances of the game before making a image, so it\nis recommended to make an empty level before continuing!");
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("Press any button to continue.");
             Console.ReadKey();
@@ -209,7 +210,7 @@ namespace ArtToGeometryDash
 
             Console.Clear();
 
-            Console.Write("Art Width and height. Type nothing for the actual image's width, otherwise it will\n either be upscaled or downscaled.\nExample: 32 32\n> ");
+            Console.Write("Art Width and height. Type nothing for the actual image's dimensions, otherwise it will\n either be upscaled or downscaled.\nExample: 32 32\n> ");
 
 
             string artsize = Console.ReadLine();
